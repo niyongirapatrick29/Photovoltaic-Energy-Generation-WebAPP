@@ -1,170 +1,244 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-# import time
-# import blinker
+import xlwings as xw
+import base64
+import operator
+# import plotly.express as px
+import matplotlib.pyplot as plt
+
+###READ BOOK############
 
 
 
-st.write("""
- # WELCOME TO WEBSITE
- This is awesome!
- """)
+bk = xw.Book("Photovoltaic module_V10.xlsx")
+def run_the_app():
+    @st.cache
+    def load_data(bk):
+        return pd.read_excel(bk)
+input = bk.sheets['Input']
+pv = "WELCOME TO WEBSITE"
+st.markdown(
+f'<body style="font-size:25px;border: 2px; background-color:skyblue; font-familly: Arial; padding: 10px; "><center>{pv}</center></body>'
+, unsafe_allow_html=True)
 
 
+
+@st.cache(allow_output_mutation=True)
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def set_png_as_page_bg(png_file):
+    bin_str = get_base64_of_bin_file(png_file)
+    page_bg_img = '''
+    <style>
+    body {
+    background-image: url("data:image/jepg;base64,%s");
+    background-size: cover;
+    }
+    </style>
+    ''' % bin_str
+    
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+    return
+
+############# Image banner ######################
+#st.image("download.jpg", width=698)
+
+#set_png_as_page_bg('images.jpg')
+
+
+#st.markdown(f'<body style="background-image: url("https://www.undp.org/sites/g/files/zskgke326/files/blogs/shutterstock-Korea-wind-turbines-1831881703.jpg");background-size: cover;"> </body>', unsafe_allow_html=True)
+
+#### Doing multiple columns ###########################
 col1, col2 = st.beta_columns(2)
-col1.success('PV1')
 
 with col1:
-    Epv = pd.read_excel("Photovoltaic module_V10.xlsx", sheet_name="PV")
-    Epv.dropna(subset=['Model'], inplace=True)
-    Epv = Epv[Epv['Model'] != 'Name']
-    # PV1
-    st.subheader("Facility Name")
-    location = st.selectbox("", options=["Select location", "Seoul","Chuncheon","Kangrueng","WonJu","DaeJeon","ChungJu","SuSan","DaeGu","PoHang","YoungJu","Busan","JinJu","JeonJu","KwangJu","MokPo","JeJu"])
-    st.subheader("Envelope")
-    Envelope_selection = st.selectbox("", options= ["Select Envelope", "North","South","East","West"])
-    direction = st.selectbox("", options=["Select Direction", "North", "South", "East", "West"])
-    Area = st.number_input("Enter Area", min_value= 0, value= 0, step=0)
-    st.subheader("Azimuth Selection")
-    Azimuth = st.selectbox("", options = ["Select Azimuth",0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330,340,350,360])
-    Slope = st.number_input("Enter a Slope", key='slope')
+        
+        pv = "PV1"
+        st.markdown(
+        f'<body style="font-size:25px;border: 2px; background-color:skyblue; font-familly: Arial; padding: 10px; "><center>{pv}</center></body>'
+        , unsafe_allow_html=True)
+        
+############### Inputs Form for PV1 ########################        
+        with st.form(key='my_form'):
+                st.text("Facility Name")
+                #st.text("Enter a Location")
+                location = st.selectbox("", options=["""Select Location""", "Seoul","Chuncheon","Kangrueng","WonJu","DaeJeon","ChungJu","SuSan","DaeGu","PoHang","YoungJu","Busan","JinJu","JeonJu","KwangJu","MokPo","JeJu"])
+                #st.subheader("Envelope")
+                Envelope_selection = st.selectbox("", options= ["Select Envelope", "North","South","East","West"])
+                direction = st.selectbox("", options=["Select Direction", "North", "South", "East", "West"])
+                Area = st.number_input("Enter Area", min_value= 0, value= 0, step=0)
+                #st.subheader("Azimuth Selection")
+                Azimuth = st.selectbox("", options = ["Select Azimuth",0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330,340,350,360])
+                Slope = st.number_input("Enter a Slope", key='slope')
+                
+                Epv = pd.read_excel("Photovoltaic module_V10.xlsx", sheet_name="PV")
+                Epv.dropna(subset=['Model'], inplace=True) 
+                Epv = Epv[Epv['Model'] != 'Name']
+                def run_the_app():
+                        @st.cache
+                        def load_data(Epv):
+                                time.sleep(2) 
+                                return pd.read_excel(Epv)
+                #st.subheader("""PV Specification Models""")
+                model = st.selectbox("Select PV Model", Epv['Model'].values)
+                #st.subheader("Scale")
+                Amodule = st.number_input("Enter Number of Modules(EA)", key='Amodule')
+                inverter = pd.read_excel("Photovoltaic module_V10.xlsx", sheet_name="Inverter")
+                inverter.dropna(subset=['Name'], inplace=True)
+                inverter = inverter[inverter['Name'] != 'Units']
+                def run_the_app():
+                        @st.cache
+                        def load_data(inverter):
+                                time.sleep(2) 
+                                return pd.read_excel(inverter)
+                
+                #st.subheader("""Inverter Models""")
+                model_units = st.selectbox("Select Inverter Model", inverter['Name'].values)
+                Rsurface = st.number_input("Enter Non-vertical Surface Solar Attenuation Rate", key='Rsurface')
+                Total_equipment_cost = st.number_input("Enter Total Equipment Cost (KRW)", key='Total equipment cost')
+                Equipment_cost = st.number_input("Enter Equipment Cost(Won)", key='Equipment_cost')
+                Analysis_period = st.number_input("Enter Analysis period(Won)", key='Analysis_period')
+                submit_button = st.form_submit_button(label='Submit')
+####################    Other PVs Menu Form    ##################
+with col2:
+        @st.cache
+        def load_data(option):
+                        time.sleep(2) 
+                        return pd.read_excel(option)
+        op = ['Select Other PV', 'PV2', 'PV3','PV4']
+        option = st.selectbox("",op)      
+        
+        
+        if option!=op[0]:    
+                with st.form(key=option):
+                        st.text("Facility Name")
+                        #st.subheader("Enter a Location")
+                        location = st.selectbox("", options=["Select Location", "Seoul","Chuncheon","Kangrueng","WonJu","DaeJeon","ChungJu","SuSan","DaeGu","PoHang","YoungJu","Busan","JinJu","JeonJu","KwangJu","MokPo","JeJu"])
+                        #st.subheader("Envelope")
+                        Envelope_selection = st.selectbox("", options= ["Select Envelope", "North","South","East","West"])
+                        direction = st.selectbox("", options=["Select Direction", "North", "South", "East", "West"])
+                        Area = st.number_input("Enter Area", min_value= 0, value= 0, step=0)
+                        #st.subheader("Azimuth Selection")
+                        Azimuth = st.selectbox("", options = ["Select Azimuth",0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330,340,350,360])
+                        Slope = st.number_input("Enter a Slope", key='slope')
+                        Epv = pd.read_excel("Photovoltaic module_V10.xlsx", sheet_name="PV")
+                        Epv.dropna(subset=['Model'], inplace=True) 
+                        Epv = Epv[Epv['Model'] != 'Name']
+                        def run_the_app():
+                                @st.cache
+                                def load_data(Epv):
+                                        time.sleep(2) 
+                                        return pd.read_excel(Epv)
+                        #st.subheader("""PV Specification Models""")
+                        model = st.selectbox("Select PV Model", Epv['Model'].values)
+                        #st.subheader("Scale")
+                        Amodule = st.number_input("Enter Number of Modules(EA)", key='Amodule')
+                        inverter = pd.read_excel("Photovoltaic module_V10.xlsx", sheet_name="Inverter")
+                        inverter.dropna(subset=['Name'], inplace=True)
+                        inverter = inverter[inverter['Name'] != 'Units']
+                        def run_the_app():
+                                @st.cache
+                                def load_data(inverter):
+                                        time.sleep(2) 
+                                        return pd.read_excel(inverter)
+                        #st.subheader("""Inverter Models""")
+                        model_units = st.selectbox("Select Inverter Model", inverter['Name'].values)
+                        Rsurface = st.number_input("Enter Non-vertical Surface Solar Attenuation Rate", key='Rsurface')
+                        Total_equipment_cost = st.number_input("Enter Total Equipment Cost (KRW)", key='Total equipment cost')
+                        Equipment_cost = st.number_input("Enter Equipment Cost(Won)", key='Equipment_cost')
+                        Analysis_period = st.number_input("Enter Analysis period(Won)", key='Analysis_period')
+                        submit_button1 = st.form_submit_button(label='Compare PV1 and '+option)
+########################    Other PVs Selection   ######################
+                        if submit_button1 and option=="PV2":
+                
+                
+                                input.range('D3:D13').value = [[location],[Envelope_selection],[direction],[Area],[Azimuth],[Slope],[model],[Amodule],[model_units],[Rsurface],[Total_equipment_cost]]
+                                #input.range('L4:L6').value = [[Equipment_cost],[Analysis_period]]
 
-    st.subheader("""PV Specification Models""")
-    model = st.selectbox("Select Model", Epv['Model'].values)
-    # st.write(model)
-    st.subheader("Scale")
-    Amodule = st.number_input("Number of modules(EA)", key='Amodule')
-    Radd = st.number_input("Additional attenuation rate(%)", key='Radd')
+                        if submit_button1 and option=="PV3":
 
-    inverter = pd.read_excel("Photovoltaic module_V10.xlsx", sheet_name="Inverter")
-    inverter.dropna(subset=['Name'], inplace=True)
-    inverter = inverter[inverter['Name'] != 'Units']
+                                input.range('E3:E13').value = [[location],[Envelope_selection],[direction],[Area],[Azimuth],[Slope],[model],[Amodule],[model_units],[Rsurface],[Total_equipment_cost]]
+                               
+                        if submit_button1 and option=="PV4":
+                                input.range('F3:F13').value = [[location],[Envelope_selection],[direction],[Area],[Azimuth],[Slope],[model],[Amodule],[model_units],[Rsurface],[Total_equipment_cost]]
+                                
 
-    st.subheader("""Inverter Models""")
-    model_units = st.selectbox("Select Inverter Model", inverter['Name'].values)
-    # st.text (Name)
-    Rsurface = st.number_input("Non-vertical surface solar attenuation rate", key='Rsurface')
-    Total_equipment_cost = st.number_input("Total equipment cost (KRW)", key='Total equipment cost')
-    # Getting module efficiency
-    pv = Epv[Epv['Model'] == model]["Module efficiency"].values[0]
-    #####st.write(pv)
-    ################ Getting inverter efficiency##########################################################
-    IV = inverter[inverter['Name'] ==model_units]["Inverter's efficiency"].values[0]
-    Rloss = 1 - (1 - 0.02) * (1 - 0.03) * (1 - 0.02) * (1 - 0.01) * (1 - 0.015) * (1 - 0.02) * (1 - 0.005) * (1 - 0.03) * IV
-    #-----------------------------------------------------------------------------------------------------------------------
+########################    writting inputs into pv1   ################ 
+if submit_button:
 
-    #++++++++++++++++++++++++++[∑(Srad,month X Rcorr)]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        input = bk.sheets['Input']
+        input.range('C3:C10').value = [[location],[Envelope_selection],[direction],[Area],[Azimuth],[Slope],[model],[Amodule]]
+        input.range('C16:C18').value = [[model_units],[Rsurface],[Total_equipment_cost]]
+        input.range('L4:L6').value = [[Equipment_cost],[Analysis_period]]
+                
+################### OUTPUT################################
+        
+st.subheader("Energy generation (kWh)")
 
-    with col1:
-        st.subheader("Are these information you provide all correct? ")
-        Radation = pd.read_excel("Photovoltaic module_V10.xlsx", sheet_name="Radation", skiprows=3,header=[0,1,2])
+input.range("A27:M31").options(pd.DataFrame).value
+st.subheader("Net profit for 30 years")
+input.range("A37:E40").options(pd.DataFrame).value
+#input.range("A33:E44").options(pd.DataFrame).value                         
 
-        #st.table(Radation.head(10))
-        #st.table(Radation.columns)
-        azdf = pd.concat((Radation[('Month', 'Unnamed: 0_level_1')],Radation[('Azimuth',Azimuth)]),axis=1)
-        azdf.rename(columns={'Unnamed: 0_level_2':'Month'}, inplace=True)
-        Rcorr = 1
-        azdf['pd'] = azdf['Radiation'] * azdf['Correction Rate']
-        Srad_month = azdf.groupby(by = 'Month')['pd'].agg(['sum'])
-        #st.table(azdf)
-        Srad_month.reset_index(inplace=True)
-        #st.write(Srad_month)
 
-        #Srad_jan = Srad_month[Srad_month['Month']==1]['sum'][0]
-        ##############################Creation and initialization of output view #############################
-        output = {'Facility name': ['PV1', 'PV2', 'PV3', 'PV4'], 'Jan.': [0, 0, 0, 0], 'Feb.': [0, 0, 0, 0],
-                  'Mar.': [3, 0, 0, 4], 'Apr.': [0, 0, 0, 0], 'May.': [0, 0, 0, 0],
-                  'Jun.': [3, 0, 0, 4], 'Jul.': [0, 0, 0, 0], 'Aug.': [0, 0, 0, 0],
-                  'Sept.': [3, 0, 0, 4], 'Oct.': [0, 0, 0, 0], 'Nov.': [0, 0, 0, 0],
-                  'Dec.': [3, 0, 0, 4]}
-        EG = pd.DataFrame(data=output)
 
-        #####################Read sum of product for each month into a dictionary #################
-        cols = {}
-        for i in range(0,12):
-            columns = EG.columns.values
-            cols[i+1]=columns[i+1]
-            Srad_jan = Srad_month['sum'][i]
-            #################### Compute PV1 for all months######################################
-            # pv_jan = EPV = [∑(Srad,jan X Rcorr)] X (EPV X (1 - Rsurface) X (1 - Rloss) X (Amodule X (1 - Radd))
-            EG[cols[i+1]][0] = (Srad_month['sum'][i]) * pv *(1-Rsurface)* (1-Rloss)*(Amodule) * (1-Radd)
 
-            #st.write(EG[cols[i+1]][0])
+########################## graph #################
+st.set_option('deprecation.showPyplotGlobalUse', False)
+# create dataframe
+df = pd.DataFrame([
+        ['INV', 100.00 ,150.00],
+        ['WRK', 200.00, 250.00],
+        ['CMP', 300.00 ,350.00],
+        ['JRB' ,400.00 ,450.00]],
 
-        st.write('Rloss = ',(1-Rloss))
-        st.write('EPv = ', pv)
-        st.write('Rsurface = ', Rsurface)
-        st.write('Radd = ', (1-Radd))
-        st.write('Amodule = ', Amodule)
+        columns=['Job Stat', 'Revenue' ,'Total Income'])
 
-        st.checkbox("YES")
-        if st.button("SUBMIT PV1"):
-            st.write()
+df = input.range("A27:M31").options(pd.DataFrame).value
 
+import seaborn as sns
+import pandas as pd
 
-#########################################################Output viewer #############################################
+pv1 = df[0:1][:]
+pv2 = df[1:2][:]
+pv3 = df[2:3][:]
+pv4 = df[3:4][:]
 
-st.table(EG)
 
+df_revised = pd.concat([pv1, pv2,pv3,pv4])
+df_revised.reset_index(inplace=True)
+df_ = df_revised.T
+df_.reset_index(inplace=True)
 
+cols = np.array(df_[df_['index']=="Facility name"].values)
 
+data =  np.array(df_[df_['index']!="Facility name"].values)
 
+p = {'Months':data[0:,0], 'PV1':data[0:,1],'PV2':data[0:,2],'PV3':data[0:,3],'PV4':data[0:,4]}
 
+#pvs = pd.DataFrame(p)
+pvs = pd.DataFrame(data=p)
 
 
+#pvs.plot.bar(rot=10, title="Energy Generation")
 
+#plot.show(block=True)
 
 
+#col = df[df['']]
 
 
+plt.subplot(x="Months", y= "PV1",data=pvs)
+plt.subplot(x="Months", y= "PV2",data=pvs)
+plt.subplot(x="Months", y= "PV3",data=pvs)
+plt.subplot(x="Months", y= "PV4",data=pvs)
+st.pyplot()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#################image bckground #################
 
